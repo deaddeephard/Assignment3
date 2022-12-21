@@ -1,35 +1,44 @@
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdlib.h>
+#include<stdio.h>
+#include<string.h>
+#include<fcntl.h>
+#include<sys/stat.h>
+#include<sys/types.h>
+#include<unistd.h>
+#include<stdlib.h>
 
-int main()
-{
-	int files_d1;
-	char *myfifo = "/tmp/myfifo";
-	mkfifo(myfifo ,0666);
-	int i= 0;
-	char arr1[1000] = {0}, *arr2 =malloc(1000);
-	while(i<49)
-	{
-		files_d1 = open(myfifo , O_RDONLY);
-		read(files_d1 , arr1 ,1000);
-		printf("Sent to Server: %d\n" ,i);
-		printf("%s" , (arr1));
-		close(files_d1);
-		int len = strlen(arr1);
+int main(){
+	int gy1;
+        
+	char* fifptr ="/tmp/myfifo";
+	
+	mkfifo(fifptr , 0666);
+	
+	char randstr[100] , ja[10];
+	
+	int idxcurr =1;
+	
+	while(idxcurr<50){
+		memset(ja ,0,10);	
+		gy1 =open(fifptr , O_RDONLY);
+		read(gy1 , randstr , 100);
 
-		const char *idx = &arr1[len-3];
-		i = atoi(idx);
-		files_d1 = open(myfifo , O_WRONLY);
-		sprintf(arr2 , "%d" , i );
-		write(files_d1 , arr2 , strlen(arr2)+1);
-		close(files_d1);
+		printf("\nStrings have been recieved from P1\n%s", randstr);
+		close(gy1);
+		memset(randstr,0,100);	
+		idxcurr +=5;
+		char pak[5];
+		sprintf(pak , "%d" ,idxcurr);
+		strcpy(ja,pak);
+
+
+		gy1 = open(fifptr , O_WRONLY);
+		write(gy1 , ja , strlen(ja)+1);
+		close(gy1);
+		
+
 	}
-	unlink(myfifo);
-	exit(0);
+
+	return 0;
+	
 }
 

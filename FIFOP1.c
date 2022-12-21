@@ -1,68 +1,63 @@
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/socket.h>
+#include<stdio.h>
+#include<string.h>
+#include<fcntl.h>
+#include<sys/stat.h>
+#include<sys/types.h>
+#include<unistd.h>
 #include<stdlib.h>
-#include <netinet/in.h>
+#include<time.h>
 
-
-
-
-static char *generate(size_t length){
-	char maines[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	char *rand_s = malloc(30);
-	int i=0;
-	while(i<length){
-	 rand_s[i] =maines[rand() % (int) (sizeof maines-1)];
-	i++;
+void generate(char randstr[][12]){
+	srand (time(NULL));
+	for(int i=0;i<=50;i++){
+		for(int j=0;j<=9 ;j++){
+			randstr[i][j] =rand() % 26 +65;
+		}
 	}
-	rand_s[length] = ' ';
-	return rand_s;
 }
 
 
 
-int main()
-{
-	int descriptor;
-	char *rand_s[50];
-	int i=0;
-	while(i<50){
-		rand_s[i] = generate(5);
-		if(i<=9){
-			sprintf(rand_s[i] , "%s 0%d\n" , rand_s[i] , i);
+int main(){
+	int gy;
+	char* fifptr = "/tmp/myfifo";
+	mkfifo(fifptr , 0666);
+	char mid[51][12] ={{0}};
+	generate(mid);
+	
+	char src[80] , dest[80];
+		
+
+	
+	int idxcurr= 1;
+	char aaja[5];
+	char ja[100];
+	
+	while(idxcurr<=50){
+		memset(ja , 0, 100);
+		gy = open(fifptr , O_WRONLY);
+	
+		strcat(mid[idxcurr],"\n");
+		
+		for(int j= idxcurr+1 ; j<=idxcurr+4 ; j++){
+
+			strcat(mid[idxcurr],mid[j]);
+			strcat(mid[idxcurr] , "\n");
 		}
-		else{
-			sprintf(rand_s[i] , "%s %d\n" , rand_s[i] , i);
-		}
-		rand_s[i][8] = '\n';
-		rand_s[i][9] = '\0' ;
-		i++;
+		printf("\nStrings has been sent to Program p2\n");
+		strcpy(ja , mid[idxcurr]);
+		write(gy , ja , strlen(ja)+1);
+		close(gy);
+		gy = open(fifptr , O_RDONLY);
+		
+		read(gy , aaja , sizeof(aaja));
+		idxcurr =atoi(aaja);
+
+		printf("\n Max Index sent by P2 %d\n" , idxcurr-1);
+	
+		close(gy);
+		memset(aaja , 0, 5);
 	}
-	mkfifo("/tmp/myfifo" , 0666);
-	char str1[1000];
-	char **mstr = malloc(10000);
-	int itr = 0;
-	while(itr<50)
-	{
-		mstr = rand_s;
-		descriptor = open("/tmp/myfifo" , O_WRONLY);
-		write(descriptor , *(mstr+itr) , strlen(*mstr));
-		write(descriptor , *(mstr+itr+1) , strlen(*mstr));
-		write(descriptor , *(mstr+itr+2) , strlen(*mstr));
-		write(descriptor , *(mstr+itr+3) , strlen(*mstr));
-		write(descriptor , *(mstr+itr+4) , strlen(*mstr));
-		close(descriptor);
-		descriptor =open("/tmp/myfifo" ,O_RDONLY);
-		read(descriptor , str1 , sizeof(str1));
-		itr =atoi(str1) +1;
-		printf("Sent by Client : %s\n" , str1);
-		close(descriptor);
-	}
-	unlink("/tmp/myfifo");
-	exit(0);
+	return 0;
 }
 
